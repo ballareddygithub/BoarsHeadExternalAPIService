@@ -1,0 +1,22 @@
+info:
+  service: ${spring.service.name}
+  port: ${server.port}
+  description: description
+
+springdoc.swagger-ui.path: /api/swagger-ui-externalapi.html
+
+
+rwpoints.api.service.baseurl: http://localhost:8081
+
+server:
+  port: 8080
+  
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+      
