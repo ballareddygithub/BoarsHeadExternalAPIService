@@ -1,8 +1,6 @@
 package com.rewardpoints.controller;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -26,7 +24,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.bh.rewardpoints.aspect.ExceptionAdvice;
 import com.bh.rewardpoints.controller.RewardPointsController;
-import com.bh.rewardpoints.exception.UserNotFoundException;
 import com.bh.rewardpoints.model.UserResponse;
 import com.bh.rewardpoints.service.RewardPointsService;
 
@@ -71,21 +68,6 @@ public class RewardPointsControllerTest {
 		.andExpect(MockMvcResultMatchers.jsonPath("[*].bhEntity").exists());
 	}
 	@Test
-	public void getAllUsersTestForNotFound() throws Exception {
-		try {
-		List<UserResponse> usersList = new ArrayList<>(); 
-		Mockito.when(rewardPointsService.getAllUsers()).thenReturn(usersList);
-		mockMvc.perform(MockMvcRequestBuilders
-				.get("/external/users")
-				.accept(MediaType.APPLICATION_JSON))
-		.andDo(print());
-		}catch(Exception e) {
-			assertTrue(e.getCause() instanceof UserNotFoundException);
-			assertEquals("No Users Found in database", e.getCause().getMessage());
-		}
-	}
-	
-	@Test
 	public void getUserTest() throws Exception {
 		
 		UserResponse userResponse = new UserResponse();
@@ -103,22 +85,7 @@ public class RewardPointsControllerTest {
 		.andExpect(MockMvcResultMatchers.jsonPath("balance").exists())
 		.andExpect(MockMvcResultMatchers.jsonPath("bhEntity").exists());
 	}
-	@Test
-	public void getUserTestForException() throws Exception {
 
-		Mockito.when(rewardPointsService.findUserByUserId(Mockito.anyString())).thenReturn(null);
-		try {
-			mockMvc.perform(MockMvcRequestBuilders
-					.get("/external/users/IL10")
-					.accept(MediaType.APPLICATION_JSON))
-			.andDo(print())
-			.andExpect(status().isNotFound());
-		}catch(Exception e) {
-			assertTrue(e.getCause() instanceof UserNotFoundException);
-			assertEquals("User for userId IL10 not found", e.getCause().getMessage());
-		}
-	}
-	
 	@Test
 	public void withdrawPointsTest() throws Exception {
 		
@@ -136,21 +103,4 @@ public class RewardPointsControllerTest {
 		.andExpect(MockMvcResultMatchers.jsonPath("balance").exists())
 		.andExpect(MockMvcResultMatchers.jsonPath("bhEntity").exists());
 	}
-	@Test
-	public void withdrawPointsTestForException() throws Exception {
-
-		Mockito.when(rewardPointsService.withdrawalPoints(Mockito.anyString(), Mockito.anyLong())).thenReturn(null);  
-		try {
-			mockMvc.perform(MockMvcRequestBuilders
-					.post("/external/points/IL10/20")
-					.accept(MediaType.APPLICATION_JSON))
-			.andDo(print())
-			.andExpect(status().isNotFound());
-
-		}catch(Exception e) {
-			assertTrue(e.getCause() instanceof UserNotFoundException);
-			assertEquals("User for userId IL10 not found", e.getCause().getMessage());
-		}
-	}
-
 }

@@ -46,9 +46,6 @@ public class RewardPointsController {
     public ResponseEntity<?> getAllUsers() throws UserNotFoundException {   
     	List<UserResponse> usersList = rewardPointsService.getAllUsers();
     	logger.info("All Users :{} ", usersList);
-    	if(CollectionUtils.isEmpty(usersList)) {
-    		throw new UserNotFoundException("No Users Found in database");
-    	}
         return ResponseEntity.ok(usersList);
     }
     @Operation(summary="getUserbyUserId",description="External API to fetch user by User Id")
@@ -59,12 +56,9 @@ public class RewardPointsController {
             @ApiResponse(responseCode = "403", description = "Permission denied")
     })
     @GetMapping("/users/{id}")
-    public ResponseEntity<?> getUserbyUserId(@PathVariable("id") String userId) throws UserNotFoundException{   
+    public ResponseEntity<?> getUserbyUserId(@PathVariable("id") String userId) throws UserNotFoundException {  
+    	logger.info("getUserbyUserId : {}", userId);
     	UserResponse userResponse = rewardPointsService.findUserByUserId(userId);
-    	if(userResponse == null) {
-    		logger.info("User is not availale for the userid : {}", userId);
-    		throw new UserNotFoundException(String.format("User for userId %s not found", userId));
-    	}
         return ResponseEntity.ok(userResponse);
     }  
     @Operation(summary="withdrawPoints",description="API to withdraw points from database")
@@ -78,10 +72,6 @@ public class RewardPointsController {
     public ResponseEntity<?> withdrawPoints(@PathVariable("id") String userId, @PathVariable("withdrawal") String withdrawal) throws UserNotFoundException, NumberFormatException{   
     	logger.info("User {} trying to withdraw reward points {}", userId, withdrawal);
     	UserResponse user = rewardPointsService.withdrawalPoints(userId, Long.valueOf(withdrawal));  
-    	if(user == null) {
-    		logger.info("User is not availale for the userid : {}", userId);
-    		throw new UserNotFoundException(String.format("User for userId %s not found", userId));
-    	}
         return ResponseEntity.ok(user);
     } 
 }

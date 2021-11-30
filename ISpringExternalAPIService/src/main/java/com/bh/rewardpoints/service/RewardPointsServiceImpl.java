@@ -1,6 +1,7 @@
 package com.bh.rewardpoints.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +14,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 
 import com.bh.rewardpoints.exception.UserNotFoundException;
@@ -26,29 +30,35 @@ public class RewardPointsServiceImpl implements RewardPointsService {
 
 	@Inject
 	private RestTemplate restTemplate;
-	
+
 	@Value("${rwpoints.api.service.baseurl}")
 	private String rwpointsApiBaseUrl;
-	
+
 	@Override
 	@SuppressWarnings("unchecked")
-	public List<UserResponse> getAllUsers() {
+	public List<UserResponse> getAllUsers() throws UserNotFoundException {
 		logger.info("getAllUsers....");
-		List<UserResponse> usersList = new ArrayList<>();
-		ResponseEntity<?> responseEntity = restTemplate.getForEntity(rwpointsApiBaseUrl + "/rewardpoints/users", List.class);
-		if(responseEntity != null) {
-			usersList = (List<UserResponse>) responseEntity.getBody();
-		}
-		return usersList; 
+		HttpHeaders headers = new HttpHeaders();
+		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+		HttpEntity<String> entity = new HttpEntity<String>(headers);
+		ResponseEntity<?> responseEntity = restTemplate.exchange(rwpointsApiBaseUrl + "/rewardpoints/users", HttpMethod.GET, entity, List.class);
+		if(responseEntity == null || responseEntity.getBody() == null) {
+    		throw new UserNotFoundException("No Users Found in database");
+    	}
+		return (List<UserResponse>) responseEntity.getBody();
 	}
 	@Override
-	public UserResponse findUserByUserId(String userId) {	
+	public UserResponse findUserByUserId(String userId) throws UserNotFoundException {	
 		logger.info("find User By Id {} : ", userId);
-		ResponseEntity<?> responseEntity = restTemplate.getForEntity(rwpointsApiBaseUrl + "/rewardpoints/users/"+userId, UserResponse.class);
-		if(responseEntity != null) {
-		 return (UserResponse) responseEntity.getBody();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+		HttpEntity <String> entity = new HttpEntity<String>(headers);
+		ResponseEntity<?> responseEntity = restTemplate.exchange(rwpointsApiBaseUrl + "/rewardpoints/users/"+userId, HttpMethod.GET, entity, UserResponse.class);
+		if(responseEntity == null || responseEntity.getBody() == null) {
+			logger.info("User is not availale for the userid : {}", userId);
+			throw new UserNotFoundException(String.format("User for userId %s not found", userId));
 		}
-		return null;
+		return (UserResponse) responseEntity.getBody();
 	}
 	@Override
 	public UserResponse withdrawalPoints(String userId, Long withdrawal) throws UserNotFoundException {
@@ -57,11 +67,13 @@ public class RewardPointsServiceImpl implements RewardPointsService {
 		Map<String, String> map = new HashMap<>();
 		map.put("id", userId);
 		map.put("withdrawal", String.valueOf(withdrawal));
+		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 		HttpEntity<String> requestEntity = new HttpEntity<>(headers);
-		ResponseEntity<UserResponse> responseEntity = restTemplate.postForEntity(rwpointsApiBaseUrl + "/rewardpoints/points/{id}/{withdrawal}", requestEntity, UserResponse.class, map);
-		if(responseEntity != null) {
-			 return (UserResponse) responseEntity.getBody();
-			}
-		return null;
+		ResponseEntity<UserResponse> responseEntity = restTemplate.exchange(rwpointsApiBaseUrl + "/rewardpoints/points/{id}/{withdrawal}",  HttpMethod.POST, requestEntity, UserResponse.class, map);
+		if(responseEntity == null  || responseEntity.getBody() == null) {
+			logger.info("User is not availale for the userid : {}", userId);
+    		throw new UserNotFoundException(String.format("User for userId %s not found", userId));
+		}
+		return  (UserResponse) responseEntity.getBody();
 	}
 }

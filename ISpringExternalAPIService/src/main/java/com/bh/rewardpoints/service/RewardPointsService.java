@@ -7,7 +7,7 @@ import com.bh.rewardpoints.model.UserResponse;
 
 public interface RewardPointsService {
 
-	public List<UserResponse> getAllUsers();
-	public UserResponse findUserByUserId(String userId);
+	public List<UserResponse> getAllUsers() throws UserNotFoundException;
+	public UserResponse findUserByUserId(String userId) throws UserNotFoundException;
 	public UserResponse withdrawalPoints(String userId, Long withdrawal) throws UserNotFoundException;
 }
